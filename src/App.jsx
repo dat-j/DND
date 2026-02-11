@@ -91,27 +91,28 @@ function App() {
     items.forEach((item, index) => {
       const el = document.getElementById(`drag-item-${item.id}`);
       if (!el) return;
-      if (`drag-item-${item.id}` === dragId) return;
+      if (`drag-item-${item.id}` === dragId) return; // bỏ qua item đang kéo
 
-      const originRect = originalItemRects[`drag-item-${item.id}`];
-      if (!originRect) return;
+      const originItem = originalItemRects[`drag-item-${item.id}`];
+      if (!originItem) return;
 
       el.style.transition = "left 0.2s ease-in-out, top 0.2s ease-in-out";
       el.style.position = "fixed";
-
+      
       if (dragIndex < targetIndex && index > dragIndex && index <= targetIndex) {
-        const prevItemId = `drag-item-${items[index - 1].id}`;
-        const prevRect = originalItemRects[prevItemId];
-        el.style.left = prevRect ? `${prevRect.left}px` : `${originRect.left}px`;
-        el.style.top = prevRect ? `${prevRect.top}px` : `${originRect.top}px`;
+        const itemToLeft = items[index - 1];
+        const rectOfItemToLeft = originalItemRects[`drag-item-${itemToLeft.id}`];
+        el.style.left = `${rectOfItemToLeft.left}px`;
+        el.style.top = `${rectOfItemToLeft.top}px`;
+
       } else if (dragIndex > targetIndex && index >= targetIndex && index < dragIndex) {
-        const nextItemId = `drag-item-${items[index + 1].id}`;
-        const nextRect = originalItemRects[nextItemId];
-        el.style.left = nextRect ? `${nextRect.left}px` : `${originRect.left}px`;
-        el.style.top = nextRect ? `${nextRect.top}px` : `${originRect.top}px`;
+        const itemToRight = items[index + 1];
+        const rectOfItemToRight = originalItemRects[`drag-item-${itemToRight.id}`];
+        el.style.left = `${rectOfItemToRight.left}px`;
+        el.style.top = `${rectOfItemToRight.top}px`;
       } else {
-        el.style.left = `${originRect.left}px`;
-        el.style.top = `${originRect.top}px`;
+        el.style.left = `${originItem.left}px`;
+        el.style.top = `${originItem.top}px`;
       }
     });
   };
@@ -123,7 +124,6 @@ function App() {
           className="drop-area"
           key={item.id}
           id={item.id}
-          onDragOver={(e) => onDragItemOver(e)}
         >
           <div
             id={`drag-item-${item.id}`}
@@ -132,6 +132,7 @@ function App() {
             onDrag={(e) => onDragItem(e)}
             onDragStart={(e) => onDragItemStart(e)}
             onDragEnd={(e) => onDragItemEnd(e)}
+            onDragOver={(e) => onDragItemOver(e)}
             draggable
           >
             {item.name}
