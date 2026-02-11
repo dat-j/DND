@@ -1,0 +1,30 @@
+.drag-context {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.drop-area {
+  border: 1px dashed;
+  height: 100px;
+  width: 100px;
+}
+
+.drag-item {
+  height: 100px;
+  width: 100px;
+  color: rgb(255, 255, 255);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-item:-webkit-drag {
+  opacity: 1;
+}
+.drop-item-area {
+  border: 1px solid;
+  padding: 10px;
+}
