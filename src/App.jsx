@@ -10,6 +10,7 @@ function App() {
     clientY: 0,
   });
   const [targetElement, setTargetElement] = useState({ id: null, x: 0, y: 0 });
+  const [originalItemRects, setOriginalItemRects] = useState({});
 
   const onDragItem = (e) => {
     const element = document.getElementById(e.target.id);
@@ -17,6 +18,15 @@ function App() {
   };
 
   const onDragItemStart = (e) => {
+    const rects = {};
+    items.forEach((item) => {
+      const el = document.getElementById(`drag-item-${item.id}`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        rects[`drag-item-${item.id}`] = { left: rect.left, top: rect.top };
+      }
+    });
+    setOriginalItemRects(rects);
     setDraggingItem({
       id: e.target.id,
       clientX: e.clientX,
@@ -29,6 +39,16 @@ function App() {
     element.style.opacity = "1";
     element.style.display = "flex";
 
+    items.forEach((item) => {
+      const el = document.getElementById(`drag-item-${item.id}`);
+      if (el) {
+        el.style.position = "";
+        el.style.left = "";
+        el.style.top = "";
+        el.style.transition = "";
+      }
+    });
+
     if (targetElement.id && draggingItem.id && targetElement.id !== draggingItem.id) {
       const dragId = parseInt(draggingItem.id.split("-")[2]);
       const targetId = parseInt(targetElement.id.split("-")[2]);
@@ -37,14 +57,14 @@ function App() {
         const result = [...prev];
         const fromIndex = result.findIndex((item) => item.id === dragId);
         const toIndex = result.findIndex((item) => item.id === targetId);
-        const temp = result[fromIndex];
-        result[fromIndex] = result[toIndex];
-        result[toIndex] = temp;
+        const [moved] = result.splice(fromIndex, 1);
+        result.splice(toIndex, 0, moved);
         return result;
       });
     }
 
     setTargetElement({ id: null, x: 0, y: 0 });
+    setOriginalItemRects({});
   };
 
   const onDragItemOver = (e) => {
@@ -55,23 +75,45 @@ function App() {
 
     const rect = element.getBoundingClientRect();
     setTargetElement({
-      ...targetElement,
       id: e.target.id,
       x: rect.left,
       y: rect.top,
     });
 
-    transitionElements(e.target.id);
+    transitionElements(draggingItem.id, e.target.id);
   };
 
-  const transitionElements = (id) => {
-    const element = document.getElementById(id);
-    if (!element) return;
-    element.style.transform = "scale(1.05)";
-    element.style.transition = "transform 0.2s ease-in-out";
-    setTimeout(() => {
-      element.style.transform = "scale(1)";
-    }, 200);
+  const transitionElements = (dragId, targetId) => {
+    const dragIndex = items.findIndex((item) => `drag-item-${item.id}` === dragId);
+    const targetIndex = items.findIndex((item) => `drag-item-${item.id}` === targetId);
+    if (dragIndex === -1 || targetIndex === -1) return;
+
+    items.forEach((item, index) => {
+      const el = document.getElementById(`drag-item-${item.id}`);
+      if (!el) return;
+      if (`drag-item-${item.id}` === dragId) return;
+
+      const originRect = originalItemRects[`drag-item-${item.id}`];
+      if (!originRect) return;
+
+      el.style.transition = "left 0.2s ease-in-out, top 0.2s ease-in-out";
+      el.style.position = "fixed";
+
+      if (dragIndex < targetIndex && index > dragIndex && index <= targetIndex) {
+        const prevItemId = `drag-item-${items[index - 1].id}`;
+        const prevRect = originalItemRects[prevItemId];
+        el.style.left = prevRect ? `${prevRect.left}px` : `${originRect.left}px`;
+        el.style.top = prevRect ? `${prevRect.top}px` : `${originRect.top}px`;
+      } else if (dragIndex > targetIndex && index >= targetIndex && index < dragIndex) {
+        const nextItemId = `drag-item-${items[index + 1].id}`;
+        const nextRect = originalItemRects[nextItemId];
+        el.style.left = nextRect ? `${nextRect.left}px` : `${originRect.left}px`;
+        el.style.top = nextRect ? `${nextRect.top}px` : `${originRect.top}px`;
+      } else {
+        el.style.left = `${originRect.left}px`;
+        el.style.top = `${originRect.top}px`;
+      }
+    });
   };
 
   return (
